@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jp/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jp/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jp/multi-client ./client
+  - docker build -t jp/multi-nginx ./nginx
+  - docker build -t jp/multi-server ./server
+  - docker build -t jp/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take the images and push to docker hub
+  - docker push jp/multi-client
+  - docker push jp/multi-nginx
+  - docker push jp/multi-server
+  - docker push jp/multi-worker
